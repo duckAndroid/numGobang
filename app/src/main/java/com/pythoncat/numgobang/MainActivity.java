@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final GobangView gv = (GobangView) findViewById(R.id.gobang_view);
+        final GobangView gv = (GobangView) findViewById(R.id.gobang_view_vv);
         gv.setGameOverListener(new GobangView.OnGameOverListener() {
             @Override
             public void isOver(GobangView.GameResult result) {

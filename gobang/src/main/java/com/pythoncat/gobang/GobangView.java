@@ -7,6 +7,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -25,6 +27,10 @@ import java.util.ArrayList;
 
 public class GobangView extends View {
 
+    private static final String INSTANCE_SUPER = "instance";
+    private static final String INSTANCE_GAME_OVER = "instance_game_over";
+    private static final String INSTANCE_WHITE_ARRAY = "instance_white_array";
+    private static final String INSTANCE_BLACK_ARRAY = "instance_black_array";
     private final static int DEF_BORDER_COLOR = 0x88000000;
     private final static int DEF_NUM = 5; // 默认是 5子棋
     private final static int DEF_MAX_LINES = 8; // 默认是 8行8列
@@ -33,10 +39,10 @@ public class GobangView extends View {
     private int borderColor;
     private int maxLine;
     private int num;
-    private float sacle;
+    private float scale;
     private Paint mPaint;
     private int mWidth;
-    private int mHeght;
+    private int mHeight;
     private float rowsHeight; // line height !
     private ArrayList<Point> mWhitePieceList = new ArrayList<>();
     private ArrayList<Point> mBlackPieceList = new ArrayList<>();
@@ -47,6 +53,7 @@ public class GobangView extends View {
     private OnGameOverListener mGameOverListener;
     private GameResult currentResult;
     private boolean gameOver;
+    private static boolean isSave; // must static !!!
 
     public GobangView(Context context) {
         this(context, null);
@@ -73,8 +80,8 @@ public class GobangView extends View {
             maxLine = DEF_MAX_LINES;
             num = DEF_NUM;
         }
-        sacle = array.getFloat(R.styleable.GobangView_scale, DEF_SCALE);
-        if (sacle > 1) sacle = DEF_SCALE;
+        scale = array.getFloat(R.styleable.GobangView_scale, DEF_SCALE);
+        if (scale > 1) scale = DEF_SCALE;
         isWhite = array.getBoolean(R.styleable.GobangView_whiteFirst, DEF_WHITE_FIRST);
         array.recycle();
         init();
@@ -116,12 +123,12 @@ public class GobangView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         this.mWidth = w;
-        this.mHeght = h;
+        this.mHeight = h;
         this.rowsHeight = w * 1f / maxLine;
         whitePiece = Bitmap.createScaledBitmap(whitePiece,
-                (int) (sacle * rowsHeight), (int) (sacle * rowsHeight), false);
+                (int) (scale * rowsHeight), (int) (scale * rowsHeight), false);
         blackPiece = Bitmap.createScaledBitmap(blackPiece,
-                (int) (sacle * rowsHeight), (int) (sacle * rowsHeight), false);
+                (int) (scale * rowsHeight), (int) (scale * rowsHeight), false);
     }
 
     @Override
@@ -134,6 +141,7 @@ public class GobangView extends View {
             mGameOverListener.isOver(currentResult);
         }
     }
+
     private boolean gameOver() {
         boolean whiteWin = ResultUtils.isCurrentWin(mWhitePieceList, num);
         boolean blackWin = ResultUtils.isCurrentWin(mBlackPieceList, num);
@@ -161,15 +169,15 @@ public class GobangView extends View {
         for (int i = 0, n = mWhitePieceList.size(); i < n; i++) {
             final Point p = mWhitePieceList.get(i);
             // (135,236) ...
-            int realX = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.x));
-            int realY = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.y));
+            int realX = (int) (rowsHeight * (0.5 - scale * 0.5 + p.x));
+            int realY = (int) (rowsHeight * (0.5 - scale * 0.5 + p.y));
             canvas.drawBitmap(whitePiece, realX, realY, null);
         }
         for (int i = 0, n = mBlackPieceList.size(); i < n; i++) {
             final Point p = mBlackPieceList.get(i);
             // (135,236) ...
-            int realX = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.x));
-            int realY = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.y));
+            int realX = (int) (rowsHeight * (0.5 - scale * 0.5 + p.x));
+            int realY = (int) (rowsHeight * (0.5 - scale * 0.5 + p.y));
             canvas.drawBitmap(blackPiece, realX, realY, null);
         }
     }
@@ -183,7 +191,7 @@ public class GobangView extends View {
         }
         for (int i = 0; i < maxLine; i++) {
             int startY = (int) (rowsHeight / 2);
-            int endY = (int) (mHeght - rowsHeight / 2);
+            int endY = (int) (mHeight - rowsHeight / 2);
             int x = (int) (rowsHeight / 2 + rowsHeight * i);
             canvas.drawLine(x, startY, x, endY, mPaint);
         }
@@ -213,8 +221,7 @@ public class GobangView extends View {
 
     private Point getValidPoint(float x, float y) {
         // (0,0) , (2,5)
-        final Point p = new Point((int) (x / rowsHeight), (int) (y / rowsHeight));
-        return p;
+        return new Point((int) (x / rowsHeight), (int) (y / rowsHeight));
     }
 
 
@@ -233,4 +240,30 @@ public class GobangView extends View {
     public interface OnGameOverListener {
         void isOver(GameResult result);
     }
+
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        isSave = true;
+        final Bundle bundle = new Bundle();
+        bundle.putBoolean(INSTANCE_GAME_OVER, gameOver);
+        bundle.putParcelableArrayList(INSTANCE_WHITE_ARRAY, mWhitePieceList);
+        bundle.putParcelableArrayList(INSTANCE_BLACK_ARRAY, mBlackPieceList);
+        bundle.putParcelable(INSTANCE_SUPER, super.onSaveInstanceState());
+        return bundle;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (isSave && state instanceof Bundle) {
+            isSave = false;
+            Bundle bundle = (Bundle) state;
+            gameOver = bundle.getBoolean(INSTANCE_GAME_OVER);
+            mWhitePieceList = bundle.getParcelableArrayList(INSTANCE_WHITE_ARRAY);
+            mBlackPieceList = bundle.getParcelableArrayList(INSTANCE_BLACK_ARRAY);
+            state = bundle.getParcelable(INSTANCE_SUPER);
+        }
+        super.onRestoreInstanceState(state);
+    }
+
 }

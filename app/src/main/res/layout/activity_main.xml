@@ -8,7 +8,7 @@
     tools:context="com.pythoncat.numgobang.MainActivity">
 
     <com.pythoncat.gobang.GobangView
-        android:id="@+id/gobang_view"
+        android:id="@+id/gobang_view_vv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true"/>
