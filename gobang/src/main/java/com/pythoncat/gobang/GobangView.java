@@ -32,6 +32,7 @@ public class GobangView extends View {
     private static final String INSTANCE_WHITE_ARRAY = "instance_white_array";
     private static final String INSTANCE_BLACK_ARRAY = "instance_black_array";
     private final static int DEF_BORDER_COLOR = 0x88000000;
+    private static boolean isSave; // must static !!!
     private final static int DEF_NUM = 5; // 默认是 5子棋
     private final static int DEF_MAX_LINES = 8; // 默认是 8行8列
     private final static float DEF_SCALE = 3 * 1.0f / 4; // 默认 棋子直径是行高的 3/4
@@ -53,7 +54,6 @@ public class GobangView extends View {
     private OnGameOverListener mGameOverListener;
     private GameResult currentResult;
     private boolean gameOver;
-    private static boolean isSave; // must static !!!
 
     public GobangView(Context context) {
         this(context, null);
@@ -264,6 +264,42 @@ public class GobangView extends View {
             state = bundle.getParcelable(INSTANCE_SUPER);
         }
         super.onRestoreInstanceState(state);
+    }
+
+    /*
+     private int borderColor;
+    private int maxLine;
+    private int num;
+    private float scale;
+     */
+
+    public void setBorderColor(int color) {
+        this.borderColor = color;
+        invalidate();
+    }
+
+    public void setNum(int num) {
+        this.num = num;
+        if (maxLine < num || maxLine <= 2 || num < 2) {
+            maxLine = DEF_MAX_LINES;
+            num = DEF_NUM;
+        }
+        invalidate();
+    }
+
+    public void setMaxLine(int max) {
+        this.maxLine = max;
+        if (maxLine < num || maxLine <= 2 || num < 2) {
+            maxLine = DEF_MAX_LINES;
+            num = DEF_NUM;
+        }
+        invalidate();
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
+        if (scale > 1) this.scale = DEF_SCALE;
+        invalidate();
     }
 
 }

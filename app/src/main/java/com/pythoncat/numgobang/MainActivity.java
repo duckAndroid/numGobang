@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final GobangView gv = (GobangView) findViewById(R.id.gobang_view_vv);
+        gv.setMaxLine(14);
         gv.setGameOverListener(new GobangView.OnGameOverListener() {
             @Override
             public void isOver(GobangView.GameResult result) {
