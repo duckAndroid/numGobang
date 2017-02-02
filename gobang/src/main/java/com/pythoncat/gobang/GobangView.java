@@ -13,6 +13,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 
+import com.pythoncat.gobang.utils.ResultUtils;
+
 import java.util.ArrayList;
 
 /**
@@ -42,6 +44,10 @@ public class GobangView extends View {
     private Bitmap whitePiece;
     private Bitmap blackPiece;
 
+    private OnGameOverListener mGameOverListener;
+    private GameResult currentResult;
+    private boolean gameOver;
+
     public GobangView(Context context) {
         this(context, null);
     }
@@ -63,7 +69,12 @@ public class GobangView extends View {
         borderColor = array.getColor(R.styleable.GobangView_borderColor, DEF_BORDER_COLOR);
         maxLine = array.getInt(R.styleable.GobangView_maxLines, DEF_MAX_LINES);
         num = array.getInt(R.styleable.GobangView_num, DEF_NUM);
+        if (maxLine < num || maxLine <= 2 || num < 2) {
+            maxLine = DEF_MAX_LINES;
+            num = DEF_NUM;
+        }
         sacle = array.getFloat(R.styleable.GobangView_scale, DEF_SCALE);
+        if (sacle > 1) sacle = DEF_SCALE;
         isWhite = array.getBoolean(R.styleable.GobangView_whiteFirst, DEF_WHITE_FIRST);
         array.recycle();
         init();
@@ -117,6 +128,31 @@ public class GobangView extends View {
     protected void onDraw(Canvas canvas) {
         drawLines(canvas);
         drawPieces(canvas);
+        gameOver = gameOver();
+        Log.e("gameover", "gv = " + gameOver);
+        if (gameOver && mGameOverListener != null) {
+            mGameOverListener.isOver(currentResult);
+        }
+    }
+    private boolean gameOver() {
+        boolean whiteWin = ResultUtils.isCurrentWin(mWhitePieceList, num);
+        boolean blackWin = ResultUtils.isCurrentWin(mBlackPieceList, num);
+        if (whiteWin) {
+            currentResult = GameResult.WhiteWin;
+        } else if (blackWin) {
+            currentResult = GameResult.BlackWin;
+        } else {
+            if (mWhitePieceList.size() + mBlackPieceList.size() >= maxLine * maxLine) {
+                currentResult = GameResult.Dogfail;
+            } else {
+                currentResult = GameResult.NotFinished;
+            }
+        }
+        return currentResult != GameResult.NotFinished;
+    }
+
+    public void setGameOverListener(OnGameOverListener listener) {
+        this.mGameOverListener = listener;
     }
 
     private void drawPieces(Canvas canvas) {
@@ -124,11 +160,17 @@ public class GobangView extends View {
         Log.w("bh", "mb = " + mBlackPieceList);
         for (int i = 0, n = mWhitePieceList.size(); i < n; i++) {
             final Point p = mWhitePieceList.get(i);
-            canvas.drawBitmap(whitePiece, p.x, p.y, null);
+            // (135,236) ...
+            int realX = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.x));
+            int realY = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.y));
+            canvas.drawBitmap(whitePiece, realX, realY, null);
         }
         for (int i = 0, n = mBlackPieceList.size(); i < n; i++) {
             final Point p = mBlackPieceList.get(i);
-            canvas.drawBitmap(blackPiece, p.x, p.y, null);
+            // (135,236) ...
+            int realX = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.x));
+            int realY = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.y));
+            canvas.drawBitmap(blackPiece, realX, realY, null);
         }
     }
 
@@ -149,6 +191,7 @@ public class GobangView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (gameOver) return false;
         final int action = event.getAction();
         if (action == MotionEvent.ACTION_UP) {
             final float x = event.getX();
@@ -171,10 +214,23 @@ public class GobangView extends View {
     private Point getValidPoint(float x, float y) {
         // (0,0) , (2,5)
         final Point p = new Point((int) (x / rowsHeight), (int) (y / rowsHeight));
-        // (135,236) ...
-        int realX = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.x));
-        int realY = (int) (rowsHeight * (0.5 - sacle * 0.5 + p.y));
-        p.set(realX, realY);
         return p;
+    }
+
+
+    public void reStart() {
+        mWhitePieceList.clear();
+        mBlackPieceList.clear();
+        gameOver = false;
+        currentResult = GameResult.NotFinished;
+        invalidate();
+    }
+
+    public enum GameResult {
+        WhiteWin, BlackWin, Dogfail, NotFinished
+    }
+
+    public interface OnGameOverListener {
+        void isOver(GameResult result);
     }
 }
