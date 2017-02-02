@@ -3,6 +3,7 @@ package com.pythoncat.numgobang;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
@@ -43,7 +44,12 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Toast.makeText(getApplicationContext(),
                                         "大爷下次再来玩啊~", Toast.LENGTH_SHORT).show();
-                                finish();
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        finish();
+                                    }
+                                }, 500);
                             }
                         })
                         .setPositiveButton("再来一局", new DialogInterface.OnClickListener() {
