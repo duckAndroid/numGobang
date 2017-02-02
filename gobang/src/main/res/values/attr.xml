@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="num" format="integer|reference"/>
+    <attr name="maxLines" format="integer|reference"/>
+    <attr name="scale" format="float|reference"/>
+    <attr name="borderColor" format="color|reference"/>
+    <attr name="whiteFirst" format="boolean|reference"/>
+    <declare-styleable name="GobangView">
+        <attr name="num"/>
+        <attr name="maxLines"/>
+        <attr name="scale"/>
+        <attr name="borderColor"/>
+        <attr name="whiteFirst"/>
+    </declare-styleable>
+</resources>
